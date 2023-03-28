@@ -31,17 +31,17 @@ func NewRouter() *Router {
 // It implements the http.Handler interface, so it can be registered to serve
 // requests:
 //
-//     var router = mux.NewRouter()
+//	var router = mux.NewRouter()
 //
-//     func main() {
-//         http.Handle("/", router)
-//     }
+//	func main() {
+//	    http.Handle("/", router)
+//	}
 //
 // Or, for Google App Engine, register it in a init() function:
 //
-//     func init() {
-//         http.Handle("/", router)
-//     }
+//	func init() {
+//	    http.Handle("/", router)
+//	}
 //
 // This will send all incoming requests to the router.
 type Router struct {
@@ -302,6 +302,12 @@ func (r *Router) HandleFunc(path string, f func(http.ResponseWriter,
 	return r.NewRoute().Path(path).HandlerFunc(f)
 }
 
+// HandleFuncWithName registers a new route with a matcher for the URL path.
+func (r *Router) HandleFuncWithName(name, path string, f func(http.ResponseWriter,
+	*http.Request)) *Route {
+	return r.Name(name).Path(path).HandlerFunc(f)
+}
+
 // Headers registers a new route with a matcher for request header values.
 // See Route.Headers().
 func (r *Router) Headers(pairs ...string) *Route {
@@ -336,6 +342,17 @@ func (r *Router) Path(tpl string) *Route {
 // See Route.PathPrefix().
 func (r *Router) PathPrefix(tpl string) *Route {
 	return r.NewRoute().PathPrefix(tpl)
+}
+
+// RemovePrefix remove a route
+func (r *Router) RemovePathByName(name string) error {
+	for i, route := range r.routes {
+		if route.GetName() == name {
+			r.routes = append(r.routes[0:i], r.routes[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("can not found route path:" + name)
 }
 
 // Queries registers a new route with a matcher for URL query values.
